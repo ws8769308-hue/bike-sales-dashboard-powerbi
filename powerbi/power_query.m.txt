@@ -1,0 +1,34 @@
+// ===== Location =====
+let
+    Source = Access.Database(File.Contents("<path>\SalesDB.accdb"), [CreateNavigationProperties=true]),
+    _Location = Source{[Schema="",Item="Location"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(_Location,{"SalesT"}),
+    #"Trimmed Text" = Table.TransformColumns(#"Removed Columns",{{"City", Text.Trim, type text}}),
+    #"Cleaned Text" = Table.TransformColumns(#"Trimmed Text",{{"City", Text.Clean, type text}}),
+    #"Capitalized Each Word" = Table.TransformColumns(#"Cleaned Text",{{"City", Text.Proper, type text}}),
+    #"Removed Duplicates" = Table.Distinct(#"Capitalized Each Word", {"CityCode"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Duplicates",{{"CityCode", Int64.Type}})
+in
+    #"Changed Type"
+
+// ===== Product =====
+let
+    Source = Access.Database(File.Contents("<path>\SalesDB.accdb"), [CreateNavigationProperties=true]),
+    _Product = Source{[Schema="",Item="Product"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(_Product,{"SalesT"}),
+    #"Removed Duplicates" = Table.Distinct(#"Removed Columns", {"ProductID"}),
+    #"Trimmed Text" = Table.TransformColumns(#"Removed Duplicates",{{"ProductName", Text.Trim, type text}, {"Category", Text.Trim, type text}}),
+    #"Cleaned Text" = Table.TransformColumns(#"Trimmed Text",{{"ProductName", Text.Clean, type text}, {"Category", Text.Clean, type text}}),
+    #"Capitalized Each Word" = Table.TransformColumns(#"Cleaned Text",{{"ProductName", Text.Proper, type text}, {"Category", Text.Proper, type text}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Capitalized Each Word",{{"Price", Currency.Type}, {"ProductID", Int64.Type}})
+in
+    #"Changed Type"
+
+// ===== SalesT =====
+let
+    Source = Access.Database(File.Contents("<path>\SalesDB.accdb"), [CreateNavigationProperties=true]),
+    _SalesT = Source{[Schema="",Item="SalesT"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(_SalesT,{"Location", "Product"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"Quantity", Int64.Type}, {"Discount", Percentage.Type}, {"ProductID", Int64.Type}, {"CityCode", Int64.Type}, {"Date", type date}})
+in
+    #"Changed Type"
